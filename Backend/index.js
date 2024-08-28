@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import protectedRoute from './routes/protectedRoutes.js'
 
 dotenv.config();
 
@@ -14,16 +15,13 @@ app.use(cors());
 app.use(express.json()); // To parse JSON request bodies
 
 // Database connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('MongoDB connected'))
 .catch((err) => console.log('Database connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
-
+app.use('/api', protectedRoute);
 app.get('/', (req, res) => {
     res.send('Welcome to the Authentication API');
 });

@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 dotenv.config(); 
 
 const PEPPER = process.env.PEPPER;
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = '1h'; // Token expiration time
+const ACCESSTOKEN_SECRET = process.env.ACCESSTOKEN_SECRET;
+const REFRESHTOKEN_SECRET = process.env.REFRESHTOKEN_SECRET;
 
 export const registerUser = async (req, res) => {
     try {
@@ -50,15 +50,43 @@ export const loginUser = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
-
-        const token = jwt.sign(
+         // Generate the access token
+        const accessToken = jwt.sign(
             { id: user._id, username: user.username },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
+            ACCESSTOKEN_SECRET,
+            { expiresIn: '10m' }
         );
 
-        res.status(200).json({ message: 'Login successful', token });
+         // Generate the refresh token
+         const refreshToken = jwt.sign(
+            { id: user._id, username: user.username },
+            REFRESHTOKEN_SECRET,
+            { expiresIn: '7d' } // Refresh token expires in 7 days
+        );
+
+        res.status(200).json({ message: 'Login successful', accessToken, refreshToken });
     } catch (error) {
         res.status(500).json({ message: 'Login failed', error: error.message });
+    }
+};
+
+export const refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token is required' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, REFRESHTOKEN_SECRET);
+        const accessToken = jwt.sign(
+            { id: decoded.id, username: decoded.username },
+            ACCESSTOKEN_SECRET,
+            { expiresIn: '10m' } // Generate a new access token
+        );
+
+        res.status(200).json({ accessToken });
+    } catch (error) {
+        res.status(403).json({ message: 'Invalid refresh token', error: error.message });
     }
 };
