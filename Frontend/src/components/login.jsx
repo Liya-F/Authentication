@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Snackbar, Button, TextField, Typography } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
-import './styles/login.css'; // Import your CSS
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import '../styles/login.css'; // Import your CSS
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -10,16 +11,15 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 export const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const [open, setOpen] = useState(false);
-    const [severity, setSeverity] = useState('success'); // 'success' or 'error'
+    const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate(); // Initialize useNavigate
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!username || !password) {
-            setMessage("Both fields are required.");
-            setSeverity('error');
-            setOpen(true);
+            alert("Both fields are required.");
             return;
         }
 
@@ -33,14 +33,17 @@ export const Login = () => {
 
         const data = await response.json();
         if (response.ok) {
-            setMessage(data.message);
-            setSeverity('success');
+            // Store tokens in localStorage or sessionStorage
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+
+            setSuccessMessage(data.message);
             setOpen(true);
-            setUsername('');
-            setPassword('');
+
+            // Redirect to profile page
+            navigate('/profile');
         } else {
-            setMessage(data.message || 'Login failed.');
-            setSeverity('error');
+            setErrorMessage(data.message);
             setOpen(true);
         }
     };
@@ -53,11 +56,20 @@ export const Login = () => {
         <div className="container">
             <form onSubmit={handleSubmit} className="login-form">
                 <Typography variant="h4">Login</Typography>
-                <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-                    <Alert onClose={handleClose} severity={severity}>
-                        {message}
-                    </Alert>
-                </Snackbar>
+                {successMessage && (
+                    <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+                        <Alert onClose={handleClose} severity="success">
+                            {successMessage}
+                        </Alert>
+                    </Snackbar>
+                )}
+                {errorMessage && (
+                    <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+                        <Alert onClose={handleClose} severity="error">
+                            {errorMessage}
+                        </Alert>
+                    </Snackbar>
+                )}
                 <div>
                     <TextField
                         label="Username"

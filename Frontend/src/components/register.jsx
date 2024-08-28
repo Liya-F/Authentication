@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './styles/register.css'; // Import your CSS
+import { useNavigate } from 'react-router-dom';
+import '../styles/register.css'; // Import your CSS
 import { Snackbar, Button, TextField, Typography } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 
@@ -19,6 +20,7 @@ export const Register = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [openSuccessSnackbar, setOpenSuccessSnackbar] = useState(false);
     const [openErrorSnackbar, setOpenErrorSnackbar] = useState(false);
+    const navigate = useNavigate();
 
     const validateInputs = () => {
         const newErrors = {};
@@ -82,6 +84,7 @@ export const Register = () => {
             setUsername('');
             setPassword('');
             setConfirmPassword('');
+            navigate('/login')
         } else {
             setErrorMessage(data.message);
             setOpenErrorSnackbar(true);
@@ -158,7 +161,7 @@ export const Register = () => {
                     {errors.confirmPassword && <small className="error-text">{errors.confirmPassword}</small>}
                 </div>
                 <Button type="submit" variant="contained" color="primary" fullWidth>
-                    Login
+                    Register
                 </Button>
             </form>
 
